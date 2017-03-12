@@ -44,8 +44,7 @@ import static com.valueyouth.timeweather.util.Constant.LEVEL_PROVINCE;
  * Created by cwang6 on 2017/1/4.
  */
 public class ChooseAreaFragment extends Fragment
-        implements AdapterView.OnItemClickListener, View.OnClickListener
-{
+        implements AdapterView.OnItemClickListener, View.OnClickListener {
     private ProgressDialog progressDialog;
 
     private TextView titleText;
@@ -79,8 +78,7 @@ public class ChooseAreaFragment extends Fragment
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)
-    {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.choose_area, container, false);
         titleText = (TextView) view.findViewById(R.id.title_text);
         backButton = (Button) view.findViewById(R.id.back_button);
@@ -92,8 +90,7 @@ public class ChooseAreaFragment extends Fragment
     }
 
     @Override
-    public void onActivityCreated(Bundle savedInstanceState)
-    {
+    public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
         listView.setOnItemClickListener(this);
@@ -103,8 +100,7 @@ public class ChooseAreaFragment extends Fragment
 
 
     @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id)
-    {
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         if (currentLevel == LEVEL_PROVINCE) {
             selectedProvince = provinceList.get(position);
             queryCities();
@@ -116,8 +112,7 @@ public class ChooseAreaFragment extends Fragment
     }
 
     @Override
-    public void onClick(View v)
-    {
+    public void onClick(View v) {
         if (currentLevel == LEVEL_COUNTY){
             queryCities();
         }
@@ -130,8 +125,7 @@ public class ChooseAreaFragment extends Fragment
      * 方法说明：查询全国所有的省份，优先从数据库查询，
      *          如果没有查到再去服务器上查询。
      */
-    private void queryProvinces()
-    {
+    private void queryProvinces() {
         titleText.setText("中国");
         backButton.setVisibility(View.GONE);
         provinceList = DataSupport.findAll(Province.class);
@@ -156,8 +150,7 @@ public class ChooseAreaFragment extends Fragment
      * 方法说明：查询全省所有市，优先从数据库查询，
      *          如果没有查到再去服务器上查询。
      */
-    private void queryCities()
-    {
+    private void queryCities() {
         titleText.setText(selectedProvince.getProvinceName());
         backButton.setVisibility(View.VISIBLE);
         cityList = DataSupport.where("provinceid = ?", String.valueOf(selectedProvince.getId()))
@@ -184,8 +177,7 @@ public class ChooseAreaFragment extends Fragment
      * 方法说明：查询全市所有县，优先从数据库查询，
      *          如果没有查到再去服务器上查询。
      */
-    private void queryCounties()
-    {
+    private void queryCounties() {
         titleText.setText(selectedCity.getCityName());
         backButton.setVisibility(View.VISIBLE);
         countyList = DataSupport.where("cityid = ?", String.valueOf(selectedCity.getId()))
@@ -214,8 +206,7 @@ public class ChooseAreaFragment extends Fragment
      * @param address 地址。
      * @param type 类型：省、市和县。
      */
-    private void queryFromServer(String address, final String type)
-    {
+    private void queryFromServer(String address, final String type) {
         showProgressDialog(); // 显示进度条
         HttpUtil.sendOKHttpRequest(address, new Callback() {
             @Override
@@ -261,8 +252,7 @@ public class ChooseAreaFragment extends Fragment
      * 方法说明：显示查询的结果。
      * @param type 类型：省、市和县。
      */
-    private void showResult(final String type)
-    {
+    private void showResult(final String type) {
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -287,8 +277,7 @@ public class ChooseAreaFragment extends Fragment
     /**
      * 方法说明：显示进度对话框。
      */
-    private void showProgressDialog()
-    {
+    private void showProgressDialog() {
         if (progressDialog == null) {
             progressDialog = new ProgressDialog(getActivity());
             progressDialog.setMessage("正在加载...");
