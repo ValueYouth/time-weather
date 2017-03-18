@@ -1,16 +1,24 @@
 package com.valueyouth.timeweather;
 
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.os.Build;
 import android.preference.PreferenceManager;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.valueyouth.timeweather.gson.Forecast;
 import com.valueyouth.timeweather.gson.Weather;
 import com.valueyouth.timeweather.util.HttpUtil;
@@ -23,6 +31,10 @@ import okhttp3.Callback;
 import okhttp3.Response;
 
 public class WeatherActivity extends AppCompatActivity {
+
+    public DrawerLayout drawerLayout;
+
+    public SwipeRefreshLayout refreshLayout;
 
     /**the main layout of the app*/
     private ScrollView weatherLayout;
@@ -52,15 +64,28 @@ public class WeatherActivity extends AppCompatActivity {
 
     private TextView sportText;
 
+    private ImageView bingPicImg;
+
+    private Button navButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (Build.VERSION.SDK_INT >= 21) {
+            View decorView = getWindow().getDecorView();
+            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);
+            getWindow().setStatusBarColor(Color.TRANSPARENT);
+        }
         setContentView(R.layout.activity_weather);
 
         /*1. initialize the whole widget*/
         // the upper part
         titleCity = (TextView) findViewById(R.id.title_city);
         degreeText = (TextView) findViewById(R.id.degree_text);
+        drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+        navButton = (Button) findViewById(R.id.nav_button);
+        refreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
+        refreshLayout.setColorSchemeResources(R.color.colorPrimary);
         weatherLayout = (ScrollView) findViewById(R.id.weather_layout);
         weatherInfoText = (TextView) findViewById(R.id.weather_info_text);
         titleUpdateTime = (TextView) findViewById(R.id.title_update_time);
@@ -75,16 +100,43 @@ public class WeatherActivity extends AppCompatActivity {
         /*2.query the data of weather*/
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         String weatherString = preferences.getString("weather", null);
+        final String weatherID;
 
         if (weatherString != null) {  // have local cache
             Weather weather = Utility.handleWeatherResponse(weatherString);
+            weatherID = weather.basic.weatherID;
             showWeatherInfo(weather);
         }
         else { // have no local cache
-            String weatherID = getIntent().getStringExtra("weather_id");
+            weatherID = getIntent().getStringExtra("weather_id");
             weatherLayout.setVisibility(View.INVISIBLE);
             requestWeather(weatherID);
         }
+
+        /*3.initialize the background image*/
+        bingPicImg = (ImageView) findViewById(R.id.bing_pic_img);
+        String bingPic = preferences.getString("bing_pic", null);
+        if (bingPic != null) {
+            Glide.with(this).load(bingPic).into(bingPicImg);
+        }
+        else {
+            loadBingPic();
+        }
+
+        /*4.the listener of the SwipeRefreshLayout*/
+        refreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                requestWeather(weatherID);
+            }
+        });
+
+        navButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawerLayout.openDrawer(GravityCompat.START);
+            }
+        });
     }
 
     /**
@@ -98,6 +150,7 @@ public class WeatherActivity extends AppCompatActivity {
             @Override
             public void onFailure(Call call, IOException e) {
                 Toast.makeText(WeatherActivity.this, "服务器异常", Toast.LENGTH_SHORT).show();
+                refreshLayout.setRefreshing(false);
             }
 
             @Override
@@ -118,13 +171,43 @@ public class WeatherActivity extends AppCompatActivity {
                         else {
                             Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_SHORT).show();
                         }
+                        refreshLayout.setRefreshing(false);
                     }
                 });
             }
         });
+
+        loadBingPic();
     }
 
+    private void loadBingPic() {
+        String requestBingPic = "http://guolin.tech/api/bing_pic";
+        HttpUtil.sendOKHttpRequest(requestBingPic, new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+            }
 
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                final String bingPic = response.body().string();
+                SharedPreferences.Editor editor = PreferenceManager.
+                        getDefaultSharedPreferences(WeatherActivity.this).edit();
+                editor.putString("bing_pic", bingPic);
+                editor.apply();
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Glide.with(WeatherActivity.this).load(bingPic).into(bingPicImg);
+                    }
+                });
+            }
+        });
+
+
+
+    }
 
     /**
      * show the city weather info which is selected by the customer.
