@@ -68,6 +68,8 @@ public class WeatherActivity extends AppCompatActivity {
 
     private Button navButton;
 
+    private String weatherID;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,7 +102,6 @@ public class WeatherActivity extends AppCompatActivity {
         /*2.query the data of weather*/
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         String weatherString = preferences.getString("weather", null);
-        final String weatherID;
 
         if (weatherString != null) {  // have local cache
             Weather weather = Utility.handleWeatherResponse(weatherString);
@@ -141,10 +142,10 @@ public class WeatherActivity extends AppCompatActivity {
 
     /**
      * request the weather info of the city by the weather id.
-     * @param weatherID the weather id
+     * @param newWeatherID the weather id
      */
-    public void requestWeather(final String weatherID) {
-        String weatherURL = "http://guolin.tech/api/weather?cityid=" + weatherID +
+    public void requestWeather(final String newWeatherID) {
+        String weatherURL = "http://guolin.tech/api/weather?cityid=" + newWeatherID +
                 "&key=bc0418b57b2d4918819d3974ac1285d9";
         HttpUtil.sendOKHttpRequest(weatherURL, new Callback() {
             @Override
@@ -166,6 +167,7 @@ public class WeatherActivity extends AppCompatActivity {
                                     getDefaultSharedPreferences(WeatherActivity.this).edit();
                             editor.putString("weather", responseText);
                             editor.apply();
+                            weatherID = weather.basic.weatherID; // fix the question of refresh
                             showWeatherInfo(weather);
                         }
                         else {
