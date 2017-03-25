@@ -6,6 +6,8 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -52,15 +54,12 @@ public class WeatherActivity extends AppCompatActivity {
 
     private TextView sportText;
 
-<<<<<<< HEAD
     private ImageView bingPicImg;
 
     private Button navButton;
 
     private String weatherID;
 
-=======
->>>>>>> parent of 922d1b8... add background and some icons
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
